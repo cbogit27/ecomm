@@ -1,26 +1,57 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-gray-200 text-gray-500;
+}
+
+/* Custom Scrollbar - Thin Version */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #2f2e2e;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(9, 0, 0, 0.6);
+  border-radius: 0;
+}
+
+/* Cursor behavior for scrollbar */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(7, 0, 0, 0.6) transparent;
+}
+
+/* Add hover styles to scrollbar thumb */
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(9, 0, 0, 0.8);
+}
+
+/* Ensure proper grabbing cursor during active drag */
+.scrollbar-thin.dragging {
+  cursor: grabbing !important;
+}
+
+.scrollbar-thin.dragging * {
+  pointer-events: none;
+}
+
+/* Override cursor styles for images */
+.scrollbar-thin .image-container {
+  cursor: pointer;
+}
+
+/* Default grab cursor for scrollable container */
+.scrollable-container {
+  cursor: grab;
+}
+
+.scrollable-container:active {
+  cursor: grabbing;
 }
