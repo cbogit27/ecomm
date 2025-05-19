@@ -1,6 +1,6 @@
-// lib/data.ts
+import { Collection, Product, CollectionResponse, ProductResponse } from './types'
 
-const collections = [
+const collections: Collection[] = [
     {
       id: 'shirts',
       name: 'Shirts',
@@ -129,17 +129,18 @@ const collections = [
     },
   ];
   
-  // Fetch full collection by slug
-  export const getCollectionWithProducts = async (slug: string) => {
-    return collections.find((collection) => collection.slug === slug) || null;
-  };
+  export const getCollections = async (): Promise<Collection[]> => {
+    return collections
+  }
   
-  // Fetch product by ID
-  export const getProductById = async (id: string) => {
+  export const getCollectionWithProducts = async (slug: string): Promise<CollectionResponse> => {
+    return collections.find(collection => collection.slug === slug) || null
+  }
+  
+  export const getProductById = async (id: string): Promise<ProductResponse> => {
     for (const collection of collections) {
-      const product = collection.products.find((product) => product.id === id);
-      if (product) return product;
+      const product = collection.products.find(product => product.id === id)
+      if (product) return product
     }
-    return null;
-  };
-  
+    return null
+  }

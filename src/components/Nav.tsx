@@ -36,7 +36,7 @@ export default function Navbar(){
       </div>
     </div> 
                 <div className="relative group">
-       <Link href={'/shop'} onTouchMove={toggleDropdown} className={`active:font-bold text-sm  text-center w-full ${activeLink('/shop') ? "border-b border-emerald-800 py-2 w-fit" : ""}`} >
+       <Link href={'/collections/all'} onTouchMove={toggleDropdown} className={`active:font-bold text-sm  text-center w-full ${activeLink('/shop') ? "border-b border-emerald-800 py-2 w-fit" : ""}`} >
          shop <KeyboardArrowDownSharpIcon fontSize='small'/>
        </Link>
 
