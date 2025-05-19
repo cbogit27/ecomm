@@ -1,26 +1,29 @@
 import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getProductById } from '@/lib/data'
 import PageWrapper from '@/components/PageWrapper'
 import { MdArrowBackIosNew } from 'react-icons/md'
 
+
 // Helper function to create SEO-friendly slugs
 const createSlug = (str: string): string => {
   return str
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
-    .replace(/^-+|-+$/g, '') // Trim hyphens from both ends
-    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-')
 }
 
-export async function generateMetadata({
-  params
-}: {
-  params: { slug: string; id: string; title: string }
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ slug: string; id: string; title: string }> 
 }): Promise<Metadata> {
-  const product = await getProductById(params.id)
+  // Destructure params first to avoid direct property access
+  const { id, slug } = await params
+  const product = await getProductById(id)
   
   if (!product) {
     return { 
@@ -29,7 +32,7 @@ export async function generateMetadata({
     }
   }
 
-  const collectionName =await params.slug
+  const collectionName = slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
@@ -38,7 +41,7 @@ export async function generateMetadata({
     title: `${product.title} | ${collectionName} Collection`,
     description: product.description,
     alternates: {
-      canonical: `/collections/${params.slug}/products/${params.id}/${createSlug(product.title)}`
+      canonical: `/collections/${slug}/products/${id}/${createSlug(product.title)}`
     },
     openGraph: {
       title: product.title,
@@ -51,22 +54,24 @@ export async function generateMetadata({
   }
 }
 
-export default async function ProductPage({
-  params
-}: {
-  params: { slug: string; id: string; title: string }
+export default async function ProductPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string; id: string; title: string }> 
 }) {
-  const product = await getProductById(params.id)
+  // Destructure params first to avoid direct property access
+  const { id, slug, title } = await params
+  const product = await getProductById(id)
+  
   if (!product) notFound()
 
   // Verify URL matches current product title
   const expectedSlug = createSlug(product.title)
-  if (params.title !== expectedSlug) {
-    // Redirect to canonical URL if title doesn't match
-    notFound() // or you could redirect here if preferred
+  if (title !== expectedSlug) {
+    redirect(`/collections/${slug}/products/${id}/${expectedSlug}`)
   }
 
-  const collectionName = params.slug
+  const collectionName = slug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
@@ -76,15 +81,15 @@ export default async function ProductPage({
       <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-4xl lg:px-8">
         <div className="mb-8">
           <Link
-            href={`/collections/${params.slug}`}
+            href={`/collections/${slug}`}
             className="inline-flex items-center text-gray-800/40 hover:text-gray-900 transition-colors duration-300"
             scroll={false}
           >
-            <MdArrowBackIosNew size={40} />
+            <MdArrowBackIosNew size={20} />
             <span className="ml-2">Back to {collectionName}</span>
           </Link>
         </div>
-
+        
         <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
           <div className="relative w-full h-96 overflow-hidden rounded-lg">
             <Image
@@ -100,7 +105,7 @@ export default async function ProductPage({
             <p className="text-lg text-gray-700">{product.description}</p>
             <div className="flex items-center gap-4">
               <p className="text-2xl font-semibold text-green-600">${product.price}</p>
-              {product.originalPrice && (
+              {'originalPrice' in product && product.originalPrice && (
                 <p className="text-lg text-gray-500 line-through">${product.originalPrice}</p>
               )}
             </div>

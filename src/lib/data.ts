@@ -1,4 +1,4 @@
-import { Collection, Product, CollectionResponse, ProductResponse } from './types'
+import { Collection, CollectionResponse, ProductResponse } from './types'
 
 const collections: Collection[] = [
     {

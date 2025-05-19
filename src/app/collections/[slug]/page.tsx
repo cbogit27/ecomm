@@ -1,114 +1,91 @@
 import { Metadata } from 'next'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { getProductById } from '@/lib/data'
+import { getCollections, getCollectionWithProducts } from '@/lib/data'
 import PageWrapper from '@/components/PageWrapper'
 import { MdArrowBackIosNew } from 'react-icons/md'
 
-// Helper function to create SEO-friendly slugs
-const createSlug = (str: string): string => {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-+/g, '-')
+// No need for Params type - use direct object destructuring
+export async function generateStaticParams() {
+  const collections = await getCollections()
+  return collections.map(collection => ({
+    slug: collection.slug
+  }))
 }
 
-export async function generateMetadata({ params }: { 
-  params: { slug: string; id: string; title: string } 
+// Modified params typing to use Promise
+export async function generateMetadata({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
 }): Promise<Metadata> {
-  // First destructure params to avoid direct property access
-  const { id, slug, title } = await params
-  const product = await getProductById(id)
+  const { slug } = await params
+  const collection = await getCollectionWithProducts(slug)
   
-  if (!product) {
-    return { 
-      title: 'Product Not Found',
-      description: 'The requested product could not be found'
-    }
+  if (!collection) return { 
+    title: 'Collection Not Found',
+    description: 'The requested collection could not be found'
   }
-
-  const collectionName = slug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-
+  
   return {
-    title: `${product.title} | ${collectionName} Collection`,
-    description: product.description,
+    title: `${collection.name} Collection`,
+    description: `Browse our ${collection.name} collection`,
     alternates: {
-      canonical: `/collections/${slug}/products/${id}/${createSlug(product.title)}`
-    },
-    openGraph: {
-      title: product.title,
-      description: product.description,
-      images: [{
-        url: product.image,
-        alt: product.title
-      }]
+      canonical: `/collections/${slug}`
     }
   }
 }
 
-export default async function ProductPage({ params }: { 
-  params: { slug: string; id: string; title: string } 
+export default async function CollectionPage({ 
+  params 
+}: { 
+  params: Promise<{ slug: string }> 
 }) {
-  // First destructure params to avoid direct property access
-  const { id, slug, title } = await params
-  const product = await getProductById(id)
+  const { slug } = await params
+  const collection = await getCollectionWithProducts(slug)
   
-  if (!product) notFound()
-
-  // Verify URL matches current product title
-  const expectedSlug = createSlug(product.title)
-  if (title !== expectedSlug) {
-    // Redirect to canonical URL if title doesn't match
-    redirect(`/collections/${slug}/products/${id}/${expectedSlug}`)
-  }
-
-  const collectionName = slug
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  if (!collection) notFound()
 
   return (
     <PageWrapper>
-      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 sm:py-24 lg:max-w-4xl lg:px-8">
+      <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-8">
           <Link
-            href={`/collections/${slug}`}
+            href="/collections/all"
             className="inline-flex items-center text-gray-800/40 hover:text-gray-900 transition-colors duration-300"
             scroll={false}
           >
-            <MdArrowBackIosNew size={40} />
-            <span className="ml-2">Back to {collectionName}</span>
+            <MdArrowBackIosNew size={20} />
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-          <div className="relative w-full h-96 overflow-hidden rounded-lg">
-            <Image
-              alt={product.title}
-              src={product.image}
-              fill
-              className="aspect-square w-full rounded-lg bg-gray-200 object-contain"
-              priority
-            />
-          </div>
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold text-gray-900">{product.title}</h1>
-            <p className="text-lg text-gray-700">{product.description}</p>
-            <div className="flex items-center gap-4">
-              <p className="text-2xl font-semibold text-green-600">${product.price}</p>
-              {'originalPrice' in product && (
-                <p className="text-lg text-gray-500 line-through">${product.originalPrice}</p>
-              )}
-            </div>
-            <button className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-800 transition-colors">
-              Add to Cart
-            </button>
-          </div>
+        <h1 className="text-3xl font-bold text-gray-900 mb-10">{collection.name}</h1>
+
+        <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+          {collection.products.map(product => (
+            <Link
+              key={product.id}
+              href={`/collections/${collection.slug}/products/${product.id}/${product.title
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')}`}
+              className="group"
+            >
+              <div className="border rounded-lg p-4 hover:shadow-lg transition">
+                <div className="relative w-full h-96 overflow-hidden rounded-lg">
+                  <Image
+                    src={product.image}
+                    alt={product.title}
+                    fill
+                    className="aspect-square w-full rounded-lg object-contain group-hover:opacity-75"
+                  />
+                </div>
+                <h3 className="mt-4 text-sm text-gray-700">{product.title}</h3>
+                <p className="mt-1 text-lg font-medium text-gray-900">${product.price}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       </div>
     </PageWrapper>
